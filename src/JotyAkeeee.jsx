@@ -284,3 +284,133 @@ export default function JotyAkeeee() {
           </div>
         </div>
       )}
+      {activeTab === "cashier" && (
+        <div style={s.cashierBody}>
+          <div style={s.cashierLeft}>
+            <div style={s.panelTitle}>Product Catalogue</div>
+            {categories.map((cat) => {
+              const catProducts = products.filter((p) => p.category === cat);
+              const isOpen = expandedCats[cat] !== false;
+              return (
+                <div key={cat} style={s.catBlock}>
+                  <div style={s.catRow}>
+                    <button style={s.catToggle} onClick={() => toggleCat(cat)}>
+                      <span style={s.catToggleIcon}>{isOpen ? "▾" : "▸"}</span>
+                      <span style={s.catToggleName}>{cat}</span>
+                      <span style={s.catCount}>{catProducts.length} items</span>
+                    </button>
+                    <button style={s.deleteSmBtn} onClick={() => deleteCategory(cat)}>✕</button>
+                  </div>
+                  {isOpen && (
+                    <div style={s.catProducts}>
+                      {catProducts.length === 0 && <div style={s.noCatProducts}>No products yet</div>}
+                      {catProducts.map((p) => (
+                        <div key={p.id} style={s.productRow}>
+                          <span style={s.productEmoji}>{p.emoji}</span>
+                          <span style={s.productName}>{p.name}</span>
+                          <span style={s.productPrice}>{formatBDT(p.price)}</span>
+                          <button style={s.editSmBtn} onClick={() => startEditProduct(p)}>Edit</button>
+                          <button style={s.deleteSmBtn} onClick={() => deleteProduct(p.id)}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <div style={s.cashierRight}>
+            <div style={s.formCard}>
+              <div style={s.formCardTitle}>Add Category</div>
+              <div style={s.formRow}>
+                <input style={s.formInput} placeholder="Category name" value={newCatName} onChange={(e) => setNewCatName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && addCategory()} />
+                <button style={s.formBtn} onClick={addCategory}>Add</button>
+              </div>
+            </div>
+            <div style={s.formCard}>
+              <div style={s.formCardTitle}>{editingProductId ? "Edit Product" : "Add Product"}</div>
+              <input style={s.formInput} placeholder="Product name" value={newProduct.name} onChange={(e) => setNewProduct((p) => ({ ...p, name: e.target.value }))} />
+              <div style={{ ...s.formRow, marginTop: 8 }}>
+                <input style={s.formInput} placeholder="Price (BDT)" type="number" value={newProduct.price} onChange={(e) => setNewProduct((p) => ({ ...p, price: e.target.value }))} />
+                <input style={s.formInput} placeholder="Emoji" value={newProduct.emoji} onChange={(e) => setNewProduct((p) => ({ ...p, emoji: e.target.value }))} />
+              </div>
+              <select style={{ ...s.formInput, marginTop: 8 }} value={newProduct.category} onChange={(e) => setNewProduct((p) => ({ ...p, category: e.target.value }))}>
+                <option value="">Select category</option>
+                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <div style={{ ...s.formRow, marginTop: 10 }}>
+                <button style={s.formBtn} onClick={saveProduct}>{editingProductId ? "Save Changes" : "Add Product"}</button>
+                {editingProductId && <button style={s.cancelBtn} onClick={() => { setEditingProductId(null); setNewProduct({ name: "", price: "", category: "", emoji: "🛍️" }); }}>Cancel</button>}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "costs" && (
+        <div style={s.costsBody}>
+          <div style={s.summaryRow}>
+            {[
+              { label: "All-Time Revenue", value: formatBDT(totalRevenue), color: "#2dd4bf" },
+              { label: "Total COGS", value: formatBDT(totalCogs), color: "#f87171" },
+              { label: "Gross Profit", value: formatBDT(grossProfit), color: grossProfit >= 0 ? "#4ade80" : "#f87171" },
+              { label: "Period Costs", value: formatBDT(totalPeriod), color: "#fb923c" },
+              { label: "Net Profit", value: formatBDT(netProfit), color: netProfit >= 0 ? "#4ade80" : "#f87171" },
+            ].map((item) => (
+              <div key={item.label} style={s.summaryCard}>
+                <div style={s.summaryLabel}>{item.label}</div>
+                <div style={{ ...s.summaryValue, color: item.color }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+          <div style={s.costsColumns}>
+            <div style={s.costsPanel}>
+              <div style={s.costsPanelHeader}><span style={s.panelTitle}>COGS</span><span style={s.panelTotal}>{formatBDT(totalCogs)}</span></div>
+              <div style={s.costsList}>
+                {cogsEntries.length === 0 && <div style={{ color: "#64748b", fontSize: 13 }}>No entries yet</div>}
+                {cogsEntries.map((e) => (
+                  <div key={e.id} style={s.costsItem}>
+                    <span style={s.costsItemName}>{e.name}</span>
+                    <span style={s.costsItemAmt}>{formatBDT(e.amount)}</span>
+                    <button style={s.editSmBtn} onClick={() => startEditCogs(e)}>Edit</button>
+                    <button style={s.deleteSmBtn} onClick={() => deleteCogs(e.id)}>✕</button>
+                  </div>
+                ))}
+              </div>
+              <div style={s.costsForm}>
+                <div style={s.formCardTitle}>{editingCogsId ? "Edit COGS" : "Add COGS Entry"}</div>
+                <input style={s.formInput} placeholder="Item name" value={cogsForm.name} onChange={(e) => setCogsForm((f) => ({ ...f, name: e.target.value }))} />
+                <div style={{ ...s.formRow, marginTop: 8 }}>
+                  <input style={s.formInput} placeholder="Amount (BDT)" type="number" value={cogsForm.amount} onChange={(e) => setCogsForm((f) => ({ ...f, amount: e.target.value }))} />
+                  <button style={s.formBtn} onClick={saveCogs}>{editingCogsId ? "Save" : "Add"}</button>
+                  {editingCogsId && <button style={s.cancelBtn} onClick={() => { setEditingCogsId(null); setCogsForm({ name: "", amount: "" }); }}>Cancel</button>}
+                </div>
+              </div>
+            </div>
+            <div style={s.costsPanel}>
+              <div style={s.costsPanelHeader}><span style={s.panelTitle}>Period Costs</span><span style={s.panelTotal}>{formatBDT(totalPeriod)}</span></div>
+              <div style={{ fontSize: 12, color: "#64748b", marginBottom: 12 }}>Fixed recurring costs (rent, salaries, utilities…)</div>
+              <div style={s.costsList}>
+                {periodCosts.length === 0 && <div style={{ color: "#64748b", fontSize: 13 }}>No entries yet</div>}
+                {periodCosts.map((e) => (
+                  <div key={e.id} style={s.costsItem}>
+                    <span style={s.costsItemName}>{e.name}</span>
+                    <span style={s.costsItemAmt}>{formatBDT(e.amount)}</span>
+                    <button style={s.editSmBtn} onClick={() => startEditPeriod(e)}>Edit</button>
+                    <button style={s.deleteSmBtn} onClick={() => deletePeriod(e.id)}>✕</button>
+                  </div>
+                ))}
+              </div>
+              <div style={s.costsForm}>
+                <div style={s.formCardTitle}>{editingPeriodId ? "Edit Period Cost" : "Add Period Cost"}</div>
+                <input style={s.formInput} placeholder="Cost name" value={periodForm.name} onChange={(e) => setPeriodForm((f) => ({ ...f, name: e.target.value }))} />
+                <div style={{ ...s.formRow, marginTop: 8 }}>
+                  <input style={s.formInput} placeholder="Amount (BDT)" type="number" value={periodForm.amount} onChange={(e) => setPeriodForm((f) => ({ ...f, amount: e.target.value }))} />
+                  <button style={s.formBtn} onClick={savePeriod}>{editingPeriodId ? "Save" : "Add"}</button>
+                  {editingPeriodId && <button style={s.cancelBtn} onClick={() => { setEditingPeriodId(null); setPeriodForm({ name: "", amount: "" }); }}>Cancel</button>}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
