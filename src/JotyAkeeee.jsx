@@ -414,3 +414,201 @@ export default function JotyAkeeee() {
           </div>
         </div>
       )}
+      {activeTab === "history" && (
+        <div style={s.historyBody}>
+          <div style={s.historyHeader}>
+            <div style={s.panelTitle}>Transaction History</div>
+            <div style={s.toggleRow}>
+              <button style={{ ...s.toggleBtn, ...(ordersView === "today" ? s.toggleActive : {}) }} onClick={() => setOrdersView("today")}>Today ({todayOrders.length})</button>
+              <button style={{ ...s.toggleBtn, ...(ordersView === "all" ? s.toggleActive : {}) }} onClick={() => setOrdersView("all")}>All Time ({allOrders.length})</button>
+            </div>
+          </div>
+          <div style={s.historyStats}>
+            <div style={s.hStat}><span style={s.hStatVal}>{recentOrders.length}</span><span style={s.hStatLbl}>Orders</span></div>
+            <div style={s.hStat}><span style={{ ...s.hStatVal, color: "#2dd4bf" }}>{formatBDT(recentOrders.reduce((s, o) => s + o.total, 0))}</span><span style={s.hStatLbl}>Revenue</span></div>
+            <div style={s.hStat}><span style={{ ...s.hStatVal, color: "#f59e0b" }}>{formatBDT(recentOrders.reduce((s, o) => s + o.discount, 0))}</span><span style={s.hStatLbl}>Discounts Given</span></div>
+          </div>
+          {recentOrders.length === 0 ? (
+            <div style={s.emptyHistory}>No transactions yet. Start selling! 🚀</div>
+          ) : (
+            <div style={s.ordersList}>
+              {recentOrders.map((o) => (
+                <div key={o.num} style={s.orderCard}>
+                  <div style={s.orderCardTop}>
+                    <span style={s.orderCardNum}>#{o.num}</span>
+                    <span style={s.orderCardDate}>{o.date} · {o.time}</span>
+                    <span style={{ ...s.pill, background: o.method === "cash" ? "#2dd4bf22" : "#a855f722", color: o.method === "cash" ? "#2dd4bf" : "#a855f7" }}>
+                      {o.method === "cash" ? "💵 Cash" : "📲 bKash/Nagad"}
+                    </span>
+                  </div>
+                  <div style={s.orderCardItems}>{o.items.map((i) => `${i.emoji} ${i.name} ×${i.qty}`).join("  ·  ")}</div>
+                  <div style={s.orderCardBottom}>
+                    {o.discount > 0 && <span style={{ color: "#2dd4bf", fontSize: 12 }}>Discount −{formatBDT(o.discount)}</span>}
+                    <span style={s.orderCardTotal}>{formatBDT(o.total)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {showReceipt && lastOrder && (
+        <div style={s.overlay} onClick={() => setShowReceipt(false)}>
+          <div style={s.receipt} onClick={(e) => e.stopPropagation()}>
+            <div style={s.receiptHeader}>
+              <span style={s.receiptLogo}>Joty Akeeee</span>
+              <span style={s.receiptSub}>Order #{lastOrder.num} · {lastOrder.time}</span>
+            </div>
+            <div style={s.receiptDivider} />
+            {lastOrder.items.map((i) => (
+              <div key={i.id} style={s.receiptRow}><span>{i.emoji} {i.name} × {i.qty}</span><span>{formatBDT(i.price * i.qty)}</span></div>
+            ))}
+            <div style={s.receiptDivider} />
+            <div style={s.receiptRow}><span>Subtotal</span><span>{formatBDT(lastOrder.subtotal)}</span></div>
+            {lastOrder.discount > 0 && <div style={{ ...s.receiptRow, color: "#2dd4bf" }}><span>Discount</span><span>−{formatBDT(lastOrder.discount)}</span></div>}
+            <div style={{ ...s.receiptRow, fontWeight: 700, fontSize: 18, marginTop: 8 }}><span>Total</span><span>{formatBDT(lastOrder.total)}</span></div>
+            <div style={{ textAlign: "center", marginTop: 12, color: "#64748b", fontSize: 13 }}>
+              Paid by {lastOrder.method === "cash" ? "Cash" : "bKash & Nagad"}
+            </div>
+            <button style={s.receiptClose} onClick={() => setShowReceipt(false)}>New Order</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+const s = {
+  root: { fontFamily: "'Inter', system-ui, sans-serif", background: "#0f1623", minHeight: "100vh", color: "#f8f6f1", display: "flex", flexDirection: "column" },
+  header: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 24px", background: "#1a1f2e", borderBottom: "1px solid #2a3040", flexWrap: "wrap", gap: 10 },
+  headerLeft: { display: "flex", alignItems: "center", gap: 14 },
+  logo: { fontSize: 20, fontWeight: 800, letterSpacing: "-0.5px", color: "#f59e0b" },
+  badge: { fontSize: 12, fontWeight: 600, color: "#94a3b8", background: "#2a3040", borderRadius: 20, padding: "3px 12px" },
+  nav: { display: "flex", gap: 6, flexWrap: "wrap" },
+  navBtn: { background: "transparent", border: "1px solid #2a3040", borderRadius: 10, color: "#94a3b8", padding: "7px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer" },
+  navActive: { background: "#f59e0b22", border: "1px solid #f59e0b", color: "#f59e0b" },
+  headerRight: { display: "flex", alignItems: "center", gap: 12 },
+  time: { fontSize: 12, color: "#64748b" },
+  avatar: { width: 32, height: 32, borderRadius: "50%", background: "#f59e0b", color: "#0f1623", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 12 },
+  body: { display: "flex", flex: 1, overflow: "hidden" },
+  left: { flex: 1, display: "flex", flexDirection: "column", padding: "20px 24px", overflowY: "auto", gap: 20 },
+  toolbar: { display: "flex", flexDirection: "column", gap: 10 },
+  search: { background: "#1a1f2e", border: "1px solid #2a3040", borderRadius: 10, padding: "10px 16px", color: "#f8f6f1", fontSize: 14, outline: "none", width: "100%", boxSizing: "border-box" },
+  cats: { display: "flex", gap: 8, flexWrap: "wrap" },
+  catBtn: { background: "#1a1f2e", border: "1px solid #2a3040", borderRadius: 20, padding: "6px 16px", color: "#94a3b8", fontSize: 13, fontWeight: 500, cursor: "pointer" },
+  catActive: { background: "#f59e0b", border: "1px solid #f59e0b", color: "#0f1623", fontWeight: 700 },
+  grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))", gap: 12 },
+  card: { background: "#1a1f2e", border: "1px solid #2a3040", borderRadius: 14, padding: "18px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", position: "relative", textAlign: "center" },
+  cardActive: { border: "1.5px solid #f59e0b", background: "#1e2435", boxShadow: "0 0 0 3px rgba(245,158,11,0.15)" },
+  cartBadge: { position: "absolute", top: 8, right: 8, background: "#f59e0b", color: "#0f1623", borderRadius: "50%", width: 20, height: 20, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" },
+  emoji: { fontSize: 32 },
+  cardName: { fontSize: 13, fontWeight: 600, color: "#e2e8f0", lineHeight: 1.3 },
+  cardPrice: { fontSize: 14, fontWeight: 700, color: "#f59e0b" },
+  empty: { color: "#64748b", fontSize: 14, gridColumn: "1/-1", padding: "24px 0" },
+  todaySummary: { background: "#1a1f2e", borderRadius: 12, padding: "16px", border: "1px solid #2a3040" },
+  todayRow: { display: "flex", gap: 24, marginTop: 8 },
+  todayStat: { display: "flex", flexDirection: "column", gap: 2 },
+  todayVal: { fontSize: 22, fontWeight: 800, color: "#f8f6f1" },
+  todayLbl: { fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8 },
+  sectionLabel: { fontSize: 11, fontWeight: 700, color: "#64748b", letterSpacing: 1, textTransform: "uppercase", marginBottom: 4 },
+  right: { width: 360, background: "#1a1f2e", borderLeft: "1px solid #2a3040", display: "flex", flexDirection: "column", padding: "20px", gap: 14, overflowY: "auto" },
+  orderHeader: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  orderTitle: { fontSize: 17, fontWeight: 700, color: "#f8f6f1" },
+  clearBtn: { background: "transparent", border: "1px solid #2a3040", borderRadius: 8, color: "#64748b", fontSize: 12, padding: "4px 12px", cursor: "pointer" },
+  cartList: { display: "flex", flexDirection: "column", gap: 10, flex: 1, minHeight: 100 },
+  emptyCart: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: 4, paddingTop: 24 },
+  cartItem: { display: "flex", alignItems: "center", gap: 10, background: "#0f1623", borderRadius: 12, padding: "10px 14px" },
+  cartEmoji: { fontSize: 22 },
+  cartInfo: { flex: 1, display: "flex", flexDirection: "column", gap: 2 },
+  cartName: { fontSize: 13, fontWeight: 600, color: "#e2e8f0" },
+  cartUnit: { fontSize: 11, color: "#64748b" },
+  qtyControl: { display: "flex", alignItems: "center", gap: 8 },
+  qtyBtn: { width: 26, height: 26, borderRadius: 8, background: "#2a3040", border: "none", color: "#f8f6f1", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
+  qtyNum: { fontSize: 14, fontWeight: 700, minWidth: 18, textAlign: "center" },
+  cartTotal: { fontSize: 14, fontWeight: 700, color: "#f8f6f1", minWidth: 52, textAlign: "right" },
+  discountBox: { background: "#0f1623", borderRadius: 12, padding: "12px 14px" },
+  discountLabel: { fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 },
+  discountRow: { display: "flex", gap: 8 },
+  discountInput: { flex: 1, background: "#1a1f2e", border: "1px solid #2a3040", borderRadius: 8, padding: "8px 12px", color: "#f8f6f1", fontSize: 13, outline: "none" },
+  discountApply: { background: "#2a3040", border: "none", borderRadius: 8, color: "#f8f6f1", padding: "8px 14px", fontSize: 13, cursor: "pointer" },
+  totals: { background: "#0f1623", borderRadius: 14, padding: "16px" },
+  totalRow: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, fontSize: 14 },
+  totalLabel: { color: "#94a3b8" },
+  totalVal: { color: "#e2e8f0", fontWeight: 500 },
+  divider: { height: 1, background: "#2a3040", margin: "10px 0" },
+  grandLabel: { fontSize: 17, fontWeight: 700, color: "#f8f6f1" },
+  grandVal: { fontSize: 22, fontWeight: 800, color: "#f59e0b" },
+  paySection: {},
+  payLabel: { fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8 },
+  paymentRow: { display: "flex", gap: 8 },
+  payBtn: { flex: 1, background: "#0f1623", border: "1.5px solid #2a3040", borderRadius: 10, color: "#94a3b8", padding: "10px 6px", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 },
+  payActive: { border: "1.5px solid #f59e0b", color: "#f59e0b", background: "#1e1a10" },
+  chargeBtn: { background: "#f59e0b", border: "none", borderRadius: 14, color: "#0f1623", fontSize: 16, fontWeight: 800, padding: "16px", cursor: "pointer", letterSpacing: "-0.3px" },
+  chargeBtnDisabled: { background: "#2a3040", color: "#64748b", cursor: "not-allowed" },
+  chargeBtnSuccess: { background: "#2dd4bf", color: "#0f1623" },
+  cashierBody: { display: "flex", flex: 1, overflow: "hidden" },
+  cashierLeft: { flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 },
+  cashierRight: { width: 320, background: "#1a1f2e", borderLeft: "1px solid #2a3040", padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 16 },
+  panelTitle: { fontSize: 15, fontWeight: 700, color: "#f8f6f1", marginBottom: 12 },
+  catBlock: { background: "#1a1f2e", borderRadius: 12, overflow: "hidden", border: "1px solid #2a3040" },
+  catRow: { display: "flex", alignItems: "center", padding: "12px 14px", borderBottom: "1px solid #2a3040" },
+  catToggle: { flex: 1, display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", cursor: "pointer", textAlign: "left" },
+  catToggleIcon: { fontSize: 14, color: "#64748b" },
+  catToggleName: { fontSize: 14, fontWeight: 700, color: "#f8f6f1" },
+  catCount: { fontSize: 11, color: "#64748b", marginLeft: 8 },
+  catProducts: { display: "flex", flexDirection: "column" },
+  noCatProducts: { padding: "12px 16px", fontSize: 13, color: "#64748b" },
+  productRow: { display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: "1px solid #1a2030", fontSize: 13 },
+  productEmoji: { fontSize: 20, minWidth: 28 },
+  productName: { flex: 1, color: "#e2e8f0", fontWeight: 500 },
+  productPrice: { color: "#f59e0b", fontWeight: 700, minWidth: 70, textAlign: "right" },
+  editSmBtn: { background: "#2a3040", border: "none", borderRadius: 6, color: "#94a3b8", padding: "4px 10px", fontSize: 11, cursor: "pointer", fontWeight: 600 },
+  deleteSmBtn: { background: "transparent", border: "none", color: "#64748b", fontSize: 14, cursor: "pointer", padding: "4px 6px" },
+  formCard: { background: "#0f1623", borderRadius: 12, padding: "16px" },
+  formCardTitle: { fontSize: 12, fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 10 },
+  formRow: { display: "flex", gap: 8 },
+  formInput: { flex: 1, background: "#1a1f2e", border: "1px solid #2a3040", borderRadius: 8, padding: "8px 12px", color: "#f8f6f1", fontSize: 13, outline: "none" },
+  formBtn: { background: "#f59e0b", border: "none", borderRadius: 8, color: "#0f1623", padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" },
+  cancelBtn: { background: "#2a3040", border: "none", borderRadius: 8, color: "#94a3b8", padding: "8px 12px", fontSize: 13, cursor: "pointer" },
+  costsBody: { flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 24 },
+  summaryRow: { display: "flex", gap: 12, flexWrap: "wrap" },
+  summaryCard: { flex: "1 1 150px", background: "#1a1f2e", borderRadius: 14, padding: "16px 20px", border: "1px solid #2a3040" },
+  summaryLabel: { fontSize: 11, color: "#64748b", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 },
+  summaryValue: { fontSize: 20, fontWeight: 800 },
+  costsColumns: { display: "flex", gap: 20, flexWrap: "wrap", flex: 1 },
+  costsPanel: { flex: "1 1 340px", background: "#1a1f2e", borderRadius: 14, padding: "20px", border: "1px solid #2a3040", display: "flex", flexDirection: "column" },
+  costsPanelHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 },
+  panelTotal: { fontSize: 16, fontWeight: 800, color: "#f59e0b" },
+  costsList: { display: "flex", flexDirection: "column", gap: 6, marginBottom: 16 },
+  costsItem: { display: "flex", alignItems: "center", gap: 10, background: "#0f1623", borderRadius: 10, padding: "10px 14px", fontSize: 13 },
+  costsItemName: { flex: 1, color: "#e2e8f0" },
+  costsItemAmt: { fontWeight: 700, color: "#f8f6f1", minWidth: 80, textAlign: "right" },
+  costsForm: { marginTop: "auto", paddingTop: 16, borderTop: "1px solid #2a3040" },
+  historyBody: { flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 20 },
+  historyHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 },
+  toggleRow: { display: "flex", gap: 8 },
+  toggleBtn: { background: "#1a1f2e", border: "1px solid #2a3040", borderRadius: 10, color: "#94a3b8", padding: "7px 14px", fontSize: 13, fontWeight: 600, cursor: "pointer" },
+  toggleActive: { background: "#f59e0b22", border: "1px solid #f59e0b", color: "#f59e0b" },
+  historyStats: { display: "flex", gap: 16, flexWrap: "wrap" },
+  hStat: { background: "#1a1f2e", borderRadius: 12, padding: "14px 20px", border: "1px solid #2a3040", display: "flex", flexDirection: "column", gap: 4, flex: "1 1 120px" },
+  hStatVal: { fontSize: 22, fontWeight: 800, color: "#f8f6f1" },
+  hStatLbl: { fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: 0.8 },
+  emptyHistory: { color: "#64748b", fontSize: 15, textAlign: "center", paddingTop: 40 },
+  ordersList: { display: "flex", flexDirection: "column", gap: 10 },
+  orderCard: { background: "#1a1f2e", borderRadius: 14, padding: "16px", border: "1px solid #2a3040", display: "flex", flexDirection: "column", gap: 8 },
+  orderCardTop: { display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" },
+  orderCardNum: { fontWeight: 800, color: "#f59e0b", fontSize: 15 },
+  orderCardDate: { fontSize: 12, color: "#64748b", flex: 1 },
+  orderCardItems: { fontSize: 13, color: "#94a3b8" },
+  orderCardBottom: { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  orderCardTotal: { fontSize: 16, fontWeight: 800, color: "#f8f6f1" },
+  pill: { borderRadius: 20, padding: "2px 10px", fontSize: 11, fontWeight: 700 },
+  overlay: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 },
+  receipt: { background: "#1a1f2e", borderRadius: 20, padding: "28px", width: 320, border: "1px solid #2a3040" },
+  receiptHeader: { textAlign: "center", marginBottom: 16 },
+  receiptLogo: { display: "block", fontSize: 20, fontWeight: 800, color: "#f59e0b" },
+  receiptSub: { fontSize: 12, color: "#64748b", marginTop: 4 },
+  receiptDivider: { height: 1, background: "#2a3040", margin: "12px 0" },
+  receiptRow: { display: "flex", justifyContent: "space-between", fontSize: 14, marginBottom: 6, color: "#e2e8f0" },
+  receiptClose: { width: "100%", marginTop: 20, background: "#f59e0b", border: "none", borderRadius: 12, color: "#0f1623", fontWeight: 800, fontSize: 15, padding: "14px", cursor: "pointer" },
+};
